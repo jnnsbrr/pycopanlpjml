@@ -19,14 +19,16 @@ jobs:
       with:
         python-version: '3.12'
 
-    - name: Install dependencies
+    - name: Install dependencies for pycopanlpjml
       run: |
         python -m pip install --upgrade pip
         pip install setuptools wheel
-        pip install -e .[dev]  # Install pycopanlpjml in editable mode
+        pip install .  # Install pycopanlpjml
+        pip install -e .[dev]  # Install development dependencies
 
     - name: Run tests for pycopanlpjml
-      run: pytest --cov --cov-report=xml
+      run: |
+        pytest --cov --cov-report=xml
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
@@ -34,16 +36,30 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
 
     - name: Check code formatting with Black
-      run: black --check .
+      run: |
+        black --check .
 
     - name: Lint code with Flake8
-      run: flake8 .
-
-    - name: Checkout and install inseeds
       run: |
-        git clone https://github.com/pik-copan/inseeds.git
-        pip install --no-deps -e inseeds
-        pip install --no-deps inseeds[all]
+        flake8 .
 
-    - name: Run tests for inseeds (without coverage)
-      run: pytest inseeds/tests
+    # --- INSEEDS CHECK ---
+    - name: Checkout inseeds
+      uses: actions/checkout@v3
+      with:
+        repository: pik-copan/inseeds
+        path: inseeds
+
+    - name: Install inseeds (without reinstalling pycopanlpjml)
+      run: |
+        pip install --no-deps -e inseeds  # Install inseeds itself, ignoring dependencies
+
+        # Install missing dependencies but NOT pycopanlpjml
+        sudo apt-get install -y jq python3-yq  # Ensure yq/tomlq is available
+        pip install $(tomlq -r '.project.dependencies[] | select(. != "pycopanlpjml")' inseeds/pyproject.toml)
+
+        pip check  # Verify no broken dependencies
+
+    - name: Run tests for inseeds
+      run: |
+        pytest inseeds/tests  # Run tests for inseeds (no coverage needed)
