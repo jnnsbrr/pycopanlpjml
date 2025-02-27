@@ -42,7 +42,8 @@ jobs:
     - name: Checkout and install inseeds
       run: |
         git clone https://github.com/pik-copan/inseeds.git
-        pip install -e inseeds  # Install inseeds in editable mode, using local pycopanlpjml
+        pip install --no-deps -e inseeds
+        pip install --no-deps inseeds[all]
 
     - name: Run tests for inseeds (without coverage)
       run: pytest inseeds/tests
