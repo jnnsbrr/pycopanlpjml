@@ -26,20 +26,9 @@ jobs:
         pip install .  # Install current repository
         pip install -e .[dev]  # Install current repository in dev mode
 
-    - name: Checkout inseeds repository
-      run: |
-        git clone https://github.com/pik-copan/inseeds.git
-        cd inseeds
-        pip install -e .  # Install inseeds in editable mode
-
     - name: Run tests for pycopanlpjml
       run: |
         pytest --cov --cov-report=xml
-
-    - name: Run tests for inseeds
-      run: |
-        cd inseeds
-        pytest
 
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v5
@@ -53,3 +42,15 @@ jobs:
     - name: Lint code with Flake8
       run: |
         flake8 .
+
+    - name: Checkout inseeds repository
+      run: |
+        git clone https://github.com/pik-copan/inseeds.git
+        cd inseeds
+        pip install -e .  # Install inseeds in editable mode
+
+    - name: Run tests for inseeds (without coverage)
+      run: |
+        cd inseeds/tests  # Navigate to the tests directory of inseeds
+        pytest  # Just run the tests without coverage
+
